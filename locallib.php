@@ -94,6 +94,7 @@ class webservice_rss_server extends webservice_base_server {
     protected function send_response() {
 
         error_log('send response: '.$this->rssformat);
+        $expires = 0;
         //Check that the returned values are valid
         $validatedvalues = null;
         try {
@@ -106,6 +107,9 @@ class webservice_rss_server extends webservice_base_server {
         if (!empty($exception)) {
             $response =  $this->generate_error($exception);
         } else {
+            if (isset($validatedvalues['expires'])) {
+                $expires = $validatedvalues['expires'];
+            }
             //We can now convert the response to the requested RSS format
             include 'Zend/Loader/Autoloader.php';
             Zend_Loader_Autoloader::autoload('Zend_Loader');
@@ -205,7 +209,7 @@ class webservice_rss_server extends webservice_base_server {
                 $response .= '</RESPONSE>'."\n";
             }
         }
-        $this->send_headers();
+        $this->send_headers($expires);
         echo $response;
     }
 
@@ -228,39 +232,32 @@ class webservice_rss_server extends webservice_base_server {
      * @return string the error in the requested RSS format
      */
     protected function generate_error($ex) {
-        if ($this->rssformat == 'json') {
-            $errorobject = new stdClass;
-            $errorobject->exception = get_class($ex);
-            $errorobject->message = $ex->getMessage();
-            if (debugging() and isset($ex->debuginfo)) {
-                $errorobject->debuginfo = $ex->debuginfo;
-            }
-            $error = json_encode($errorobject);
-        } else {
-            $error = '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
-            $error .= '<EXCEPTION class="'.get_class($ex).'">'."\n";
-            $error .= '<MESSAGE>'.htmlspecialchars($ex->getMessage(), ENT_COMPAT, 'UTF-8').'</MESSAGE>'."\n";
-            if (debugging() and isset($ex->debuginfo)) {
-                $error .= '<DEBUGINFO>'.htmlspecialchars($ex->debuginfo, ENT_COMPAT, 'UTF-8').'</DEBUGINFO>'."\n";
-            }
-            $error .= '</EXCEPTION>'."\n";
+        $error = '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
+        $error .= '<EXCEPTION class="'.get_class($ex).'">'."\n";
+        $error .= '<MESSAGE>'.htmlspecialchars($ex->getMessage(), ENT_COMPAT, 'UTF-8').'</MESSAGE>'."\n";
+        if (debugging() and isset($ex->debuginfo)) {
+            $error .= '<DEBUGINFO>'.htmlspecialchars($ex->debuginfo, ENT_COMPAT, 'UTF-8').'</DEBUGINFO>'."\n";
         }
+        $error .= '</EXCEPTION>'."\n";
         return $error;
     }
 
     /**
      * Internal implementation - sending of page headers.
+     * @param integer $expires
      * @return void
      */
-    protected function send_headers() {
-        if ($this->rssformat == 'json') {
-            header('Content-type: application/json');
-        } else {
-            header('Content-Type: application/xml; charset=utf-8');
+    protected function send_headers($expires=0) {
+        if ($this->rssformat == 'atom') {
+            header('Content-type: application/atom+xml');
             header('Content-Disposition: inline; filename="response.xml"');
         }
+        else {
+            header('Content-Type: application/rss+xml; charset=utf-8');
+            header('Content-Disposition: inline; filename="response.rss"');
+        }
         header('Cache-Control: private, must-revalidate, pre-check=0, post-check=0, max-age=0');
-        header('Expires: '. gmdate('D, d M Y H:i:s', 0) .' GMT');
+        header('Expires: '. gmdate('D, d M Y H:i:s', $expires) .' GMT');
         header('Pragma: no-cache');
         header('Accept-Ranges: none');
     }
