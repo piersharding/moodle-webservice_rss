@@ -36,7 +36,6 @@ if (!webservice_protocol_is_enabled('rss')) {
 }
 
 $rssformat = optional_param('wsrssformat', 'atom', PARAM_ALPHANUM);
-error_log('RSS Web Service: '. $rssformat);
 //remove the alt from the request
 if(isset($_GET['wsrssformat'])) {
     unset($_GET['wsrssformat']);

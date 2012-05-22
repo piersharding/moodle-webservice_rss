@@ -60,6 +60,7 @@ This defines a generic structure like:
                     )
     );
 
+An example implementation is found in the example/local/rsscourse directory.  Deploy this in <moodle root>/local/rsscourse/ .
 
 Copyright (C) Piers Harding 2012 and beyond, All rights reserved
 

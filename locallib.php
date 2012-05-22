@@ -93,7 +93,6 @@ class webservice_rss_server extends webservice_base_server {
      */
     protected function send_response() {
 
-        error_log('send response: '.$this->rssformat);
         $expires = 0;
         //Check that the returned values are valid
         $validatedvalues = null;
@@ -102,7 +101,6 @@ class webservice_rss_server extends webservice_base_server {
             $validatedvalues = external_api::clean_returnvalue(webservice_rss_atom_returns(), $this->returns);
         } catch (Exception $ex) {
             $exception = $ex;
-            error_log('WS RSS: return values validation failure - '.var_export($exception, true));
         }
         if (!empty($exception)) {
             $response =  $this->generate_error($exception);
@@ -114,7 +112,6 @@ class webservice_rss_server extends webservice_base_server {
             include 'Zend/Loader/Autoloader.php';
             Zend_Loader_Autoloader::autoload('Zend_Loader');
             if ($this->rssformat == 'atom') {
-                error_log('generating ATOM');
                 $feed = new Zend_Feed_Writer_Feed();
                 $feed->setTitle($validatedvalues['title']);
                 $feed->setLink($validatedvalues['link']);
@@ -145,7 +142,6 @@ class webservice_rss_server extends webservice_base_server {
                 $response = $feed->export('atom');
             }
             else if ($this->rssformat == 'rss91') {
-                error_log('generating RSS 0.91');
                 $feed = new Zend_Feed_Writer_Feed();
                 $feed->setEncoding('ISO-8859-1');
                 $feed->setTitle($validatedvalues['title']);
@@ -171,7 +167,6 @@ class webservice_rss_server extends webservice_base_server {
                 $response = $feed->export('rss91');
             }
             else if ($this->rssformat == 'rss') {
-                error_log('generating RSS 2.0');
                 $feed = new Zend_Feed_Writer_Feed();
                 $feed->setTitle($validatedvalues['title']);
                 $feed->setDescription($validatedvalues['title']);
